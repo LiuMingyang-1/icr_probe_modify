@@ -4,6 +4,10 @@ import time
 import numpy as np
 
 def move_tensors_to_device(container, device):
+    """
+    Move all tensors in a container to a given device.
+    """
+    
     if isinstance(container, torch.Tensor):
         return container.to(device)
     elif isinstance(container, list):
@@ -18,6 +22,19 @@ def move_tensors_to_device(container, device):
 class ICRScore:
 
     def __init__(self, hidden_states, attentions, skew_threshold=3, entropy_threshold=3, core_positions=None,icr_device=None):
+        if (
+            attentions is None
+            or len(attentions) == 0
+            or attentions[0] is None
+            or len(attentions[0]) == 0
+            or attentions[0][0] is None
+            or len(attentions[0][0]) == 0
+        ):
+            raise ValueError(
+                "Empty attentions received. This usually happens when model attention backend "
+                "does not support output_attentions=True (e.g., sdpa). "
+                "Load model with attn_implementation='eager'."
+            )
         self.origional_device = hidden_states[0][0].device
         self.icr_device = icr_device
         if self.icr_device != self.origional_device:
@@ -220,13 +237,16 @@ class ICRScore:
             for token in range(len(self.pooling_attentions[layer])):
 
                 current_token_attn = self.pooling_attentions[layer][token]
+                current_token_attn = torch.nan_to_num(current_token_attn, nan=0.0, posinf=0.0, neginf=0.0)
 
  
-                top_k = min(top_k, len(current_token_attn)) if (top_k is not None) else len(current_token_attn)
-                top_k = top_k if top_p is None else int(top_p * len(current_token_attn))
-                top_p_token = top_k/max(len(current_token_attn),1e-6)
+                effective_top_k = min(top_k, len(current_token_attn)) if (top_k is not None) else len(current_token_attn)
+                effective_top_k = effective_top_k if top_p is None else int(top_p * len(current_token_attn))
+                # Avoid empty top-k which can create NaN in downstream stats/divergence.
+                effective_top_k = max(1, min(int(effective_top_k), len(current_token_attn)))
+                top_p_token = effective_top_k/max(len(current_token_attn),1e-6)
                 top_p_layer.append(top_p_token)
-                current_token_attn_topk, current_token_attn_topk_idx = torch.topk(current_token_attn, k=top_k)
+                current_token_attn_topk, current_token_attn_topk_idx = torch.topk(current_token_attn, k=effective_top_k)
              
                 current_token_hs = self.output_hidden_states[layer + 1][token]
                 previous_token_hs = self.output_hidden_states[layer][token]
@@ -241,6 +261,8 @@ class ICRScore:
                 if hidden_uniform: # ablation study
                     w_i = torch.ones_like(w_i) / len(w_i)
                 icr_score = js_divergence(w_i, current_token_attn_topk)
+                if not np.isfinite(icr_score):
+                    icr_score = 0.0
                 icr_scores_layer.append(icr_score)
             top_p_list.append(top_p_layer)
 
@@ -252,16 +274,30 @@ class ICRScore:
 
 
 def kl_divergence(P, Q):
+    eps = 1e-12
+    P = P.clamp_min(eps)
+    Q = Q.clamp_min(eps)
     kl_divergence = (P * (P / Q).log()).sum()
     return kl_divergence.item()
 
 def js_divergence(p, q):
+    # Use float32 for numerically stable normalization/softmax.
+    p = p.float()
+    q = q.float()
+    if p.numel() == 0 or q.numel() == 0:
+        return 0.0
+    p = torch.nan_to_num(p, nan=0.0, posinf=0.0, neginf=0.0)
+    q = torch.nan_to_num(q, nan=0.0, posinf=0.0, neginf=0.0)
+
     # standardize: p, q -> N(0, 1)
-    p = (p - p.mean()) / max(p.std(), 1e-8)
-    q = (q - q.mean()) / max(q.std(), 1e-8)
+    p = (p - p.mean()) / p.std(unbiased=False).clamp_min(1e-8)
+    q = (q - q.mean()) / q.std(unbiased=False).clamp_min(1e-8)
     # softmax: p, q -> [0, 1]
     p = F.softmax(p, dim=0)
     q = F.softmax(q, dim=0)
+    p = torch.nan_to_num(p, nan=0.0, posinf=0.0, neginf=0.0)
+    q = torch.nan_to_num(q, nan=0.0, posinf=0.0, neginf=0.0)
 
     m = 0.5 * (p + q)
+    m = torch.nan_to_num(m, nan=0.0, posinf=0.0, neginf=0.0)
     return 0.5 * kl_divergence(p, m) + 0.5 * kl_divergence(q, m)
