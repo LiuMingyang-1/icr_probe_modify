@@ -6,7 +6,7 @@ python scripts/compute_icr_halueval.py \
     --pairing random \
     --seed 42 \
     --attn_implementation eager \
-    --output_path /home/sjx/hallucination/ICR_Probe/outputs/icr_qa_random_qwen3.jsonl
+    --output_path /home/sjx/hallucination/ICR_Probe/outputs/icr_halu_eval_random_qwen3.jsonl
 
 nohup python scripts/compute_icr_halueval.py \
     --model_name_or_path /data/sjx/models/Qwen2.5-7B-Instruct \
@@ -21,3 +21,20 @@ nohup python scripts/compute_icr_halueval.py \
 
 # SQuAD
 
+python scripts/compute_icr_squad2.py \
+    --model_name_or_path /data/sjx/models/Qwen3-4B-Instruct-2507 \
+    --data_path /home/sjx/hallucination/dataset/SQuAD2.0/dev-v2.0.json \
+    --task squad2 \
+    --pairing random \
+    --seed 42 \
+    --attn_implementation eager \
+    --output_path /home/sjx/hallucination/ICR_Probe/outputs/icr_squad2_random_qwen3.jsonl
+
+python scripts/compute_icr_squad2.py \
+    --model_name_or_path /data/sjx/models/Qwen2.5-7B-Instruct \
+    --data_path /home/sjx/hallucination/dataset/SQuAD2.0/dev-v2.0.json \
+    --task squad2 \
+    --pairing random \
+    --seed 42 \
+    --attn_implementation eager \
+    --output_path /home/sjx/hallucination/ICR_Probe/outputs/icr_squad2_random_qwen2.5.jsonl
