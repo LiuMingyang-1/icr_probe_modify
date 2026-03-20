@@ -259,35 +259,40 @@ def collect_stepwise_cache(
     response_ids: torch.Tensor,
     device: str,
 ) -> Tuple[List[Any], List[Any]]:
+    """Single forward pass over prompt+response, then split into step-by-step format
+    expected by ICRScore. Equivalent to token-by-token KV-cache decoding
+    (causal mask guarantees identical hidden states / attentions) but much faster."""
+    prompt_len = prompt_ids.numel()
+    full_ids = torch.cat([prompt_ids, response_ids]).unsqueeze(0).to(device)
+
+    with torch.no_grad():
+        out = model(
+            input_ids=full_ids,
+            output_hidden_states=True,
+            output_attentions=True,
+            use_cache=False,
+            return_dict=True,
+        )
+
+    # Convert single-pass outputs to the step-by-step list format ICRScore expects.
+    # Step 0 (prompt): hidden [1, prompt_len, H], attn [1, heads, prompt_len, prompt_len]
+    # Step i (response token i): hidden [1, 1, H], attn [1, heads, 1, prompt_len+i]
     hidden_states_steps: List[Any] = []
     attentions_steps: List[Any] = []
 
-    with torch.no_grad():
-        inputs = prompt_ids.unsqueeze(0).to(device)
-        out = model(
-            input_ids=inputs,
-            output_hidden_states=True,
-            output_attentions=True,
-            use_cache=True,
-            return_dict=True,
-        )
-        hidden_states_steps.append(out.hidden_states)
-        attentions_steps.append(out.attentions)
-        past_key_values = out.past_key_values
+    # Step 0: prompt
+    hs_prompt = tuple(h[:, :prompt_len, :] for h in out.hidden_states)
+    attn_prompt = tuple(a[:, :, :prompt_len, :prompt_len] for a in out.attentions)
+    hidden_states_steps.append(hs_prompt)
+    attentions_steps.append(attn_prompt)
 
-        for token_id in response_ids:
-            next_input = token_id.view(1, 1).to(device)
-            out = model(
-                input_ids=next_input,
-                past_key_values=past_key_values,
-                output_hidden_states=True,
-                output_attentions=True,
-                use_cache=True,
-                return_dict=True,
-            )
-            hidden_states_steps.append(out.hidden_states)
-            attentions_steps.append(out.attentions)
-            past_key_values = out.past_key_values
+    # Steps 1..N: each response token
+    for i in range(response_ids.numel()):
+        pos = prompt_len + i
+        hs_step = tuple(h[:, pos:pos+1, :] for h in out.hidden_states)
+        attn_step = tuple(a[:, :, pos:pos+1, :pos+1] for a in out.attentions)
+        hidden_states_steps.append(hs_step)
+        attentions_steps.append(attn_step)
 
     return hidden_states_steps, attentions_steps
 
