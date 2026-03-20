@@ -307,7 +307,7 @@ def main() -> None:
 
     model = AutoModelForCausalLM.from_pretrained(
         args.model_name_or_path,
-        dtype=dtype,
+        torch_dtype=dtype,
         device_map=None,
         attn_implementation=args.attn_implementation,
     ).to(device)
