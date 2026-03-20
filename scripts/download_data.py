@@ -21,19 +21,19 @@ def download_halueval(data_dir: Path) -> None:
 
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    print("[HaluEval] Downloading qa/ folder from pminervini/HaluEval ...")
+    # qa_samples/ has the right fields: knowledge, question, right_answer, hallucinated_answer
+    # qa/ only has answer + hallucination label, which doesn't match the code
+    print("[HaluEval] Downloading qa_samples/ folder from pminervini/HaluEval ...")
     local_dir = snapshot_download(
         repo_id="pminervini/HaluEval",
         repo_type="dataset",
-        allow_patterns=["qa/*"],
+        allow_patterns=["qa_samples/*"],
         local_dir=str(out_dir / "_hf_cache"),
     )
 
-    # Find the downloaded qa data file and copy/convert to the expected location
+    # Find the downloaded data file and copy/convert to the expected location
     local_dir = Path(local_dir)
-    candidates = list(local_dir.rglob("qa_data.json"))
-    if not candidates:
-        candidates = list((local_dir / "qa").glob("*.json")) if (local_dir / "qa").exists() else []
+    candidates = list(local_dir.rglob("*.json"))
     if not candidates:
         candidates = list(local_dir.rglob("*.parquet"))
 
