@@ -4,29 +4,53 @@
 import argparse
 import json
 import os
+import shutil
 from pathlib import Path
 
 
 def download_halueval(data_dir: Path) -> None:
-    """Download HaluEval qa_data.json from HuggingFace Hub."""
-    from huggingface_hub import hf_hub_download
+    """Download HaluEval qa subset from HuggingFace Hub via snapshot_download."""
+    from huggingface_hub import snapshot_download
 
     out_dir = data_dir / "HaluEval"
-    out_dir.mkdir(parents=True, exist_ok=True)
-
     dest = out_dir / "qa_data.json"
+
     if dest.exists():
         print(f"[HaluEval] Already exists: {dest}")
         return
 
-    print("[HaluEval] Downloading qa_data.json from pminervini/HaluEval ...")
-    local = hf_hub_download(
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    print("[HaluEval] Downloading qa/ folder from pminervini/HaluEval ...")
+    local_dir = snapshot_download(
         repo_id="pminervini/HaluEval",
-        filename="qa_data.json",
         repo_type="dataset",
-        local_dir=str(out_dir),
+        allow_patterns=["qa/*"],
+        local_dir=str(out_dir / "_hf_cache"),
     )
-    print(f"[HaluEval] Saved to: {local}")
+
+    # Find the downloaded qa data file and copy to expected location
+    local_dir = Path(local_dir)
+    candidates = list(local_dir.rglob("qa_data.json"))
+    if not candidates:
+        # fallback: list all json files under qa/
+        candidates = list((local_dir / "qa").glob("*.json")) if (local_dir / "qa").exists() else []
+    if not candidates:
+        candidates = list(local_dir.rglob("*.json"))
+
+    if not candidates:
+        raise FileNotFoundError(
+            f"No JSON files found after download. Contents: {list(local_dir.rglob('*'))}"
+        )
+
+    src = candidates[0]
+    shutil.copy2(src, dest)
+    print(f"[HaluEval] Saved to: {dest}  (source: {src.relative_to(local_dir)})")
+
+    # Clean up cache dir
+    cache_dir = out_dir / "_hf_cache"
+    if cache_dir.exists():
+        shutil.rmtree(cache_dir)
 
 
 def download_squad2(data_dir: Path) -> None:
