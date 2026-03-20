@@ -1,3 +1,4 @@
+import os
 import torch
 from src.icr_score import ICRScore
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -64,18 +65,19 @@ def get_cached(
     return hidden_states, attentions
 
 
-def compute_icr_scores(hidden_states, attentions):
+def compute_icr_scores(hidden_states, attentions, start_position=0, end_position=0, response_start_position=0):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     icr_calculator = ICRScore(
         hidden_states=hidden_states,
         attentions=attentions,
         skew_threshold=0,
         entropy_threshold=1e5,
         core_positions={
-            'user_prompt_start': start_position,  
-            'user_prompt_end': end_position,  
-            'response_start': response_start_position,  
+            'user_prompt_start': start_position,
+            'user_prompt_end': end_position,
+            'response_start': response_start_position,
         },
-        icr_device='cuda'
+        icr_device=device,
     )
     icr_scores, top_p_mean = icr_calculator.compute_icr(
         top_k=20,
@@ -88,7 +90,7 @@ def compute_icr_scores(hidden_states, attentions):
     return icr_scores, top_p_mean
 
 if __name__ == "__main__":
-    model_name = "/data/sjx/models/Meta-Llama-3-8B-Instruct"
+    model_name = os.environ.get("MODEL_PATH", "Qwen/Qwen2.5-7B-Instruct")
     texts = "Hello, how are you?"
     hidden_states, attentions = get_cached(model_name, texts)
     icr_scores, top_p_mean = compute_icr_scores(hidden_states, attentions)

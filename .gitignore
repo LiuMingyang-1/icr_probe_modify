@@ -1,7 +1,14 @@
 saves/
 outputs/
 logs/
+data/
 __pycache__/
 */__pycache__/
+**/__pycache__/
 .ipynb_checkpoints/
 *.pyc
+.venv/
+.DS_Store
+*.egg-info/
+dist/
+build/
