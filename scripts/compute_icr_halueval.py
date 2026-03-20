@@ -154,6 +154,8 @@ def infer_halueval_task(record: Dict[str, Any], specified: str) -> str:
         return "general"
     if {"knowledge", "question", "right_answer", "hallucinated_answer"}.issubset(keys):
         return "qa"
+    if {"knowledge", "question", "answer", "hallucination"}.issubset(keys):
+        return "qa"
     if {"knowledge", "dialogue_history", "right_response", "hallucinated_response"}.issubset(keys):
         return "dialogue"
     if {"document", "right_summary", "hallucinated_summary"}.issubset(keys):
@@ -193,6 +195,11 @@ def make_halueval_candidates(
 
     if task == "qa":
         prompt = f"Knowledge:\n{record['knowledge']}\n\nQuestion:\n{record['question']}\n\nAnswer:"
+        # HuggingFace HaluEval uses single-answer format: answer + hallucination label
+        if "right_answer" not in record and "answer" in record:
+            response = str(record["answer"])
+            label = normalize_binary_label(record.get("hallucination"))
+            return [{"prompt": prompt, "response": response, "label": label, "response_type": "answer"}]
         right = str(record["right_answer"])
         hallu = str(record["hallucinated_answer"])
     elif task == "dialogue":

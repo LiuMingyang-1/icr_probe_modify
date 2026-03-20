@@ -1,8 +1,6 @@
 saves/
 outputs/
 logs/
-data/
-!data/
 data/*
 !data/HaluEval/
 data/HaluEval/*
