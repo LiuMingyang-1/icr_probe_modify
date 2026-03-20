@@ -29,14 +29,13 @@ def download_halueval(data_dir: Path) -> None:
         local_dir=str(out_dir / "_hf_cache"),
     )
 
-    # Find the downloaded qa data file and copy to expected location
+    # Find the downloaded qa data file and copy/convert to the expected location
     local_dir = Path(local_dir)
     candidates = list(local_dir.rglob("qa_data.json"))
     if not candidates:
-        # fallback: list all json files under qa/
         candidates = list((local_dir / "qa").glob("*.json")) if (local_dir / "qa").exists() else []
     if not candidates:
-        candidates = list(local_dir.rglob("*.json"))
+        candidates = list(local_dir.rglob("*.parquet"))
 
     if not candidates:
         raise FileNotFoundError(
@@ -44,8 +43,25 @@ def download_halueval(data_dir: Path) -> None:
         )
 
     src = candidates[0]
-    shutil.copy2(src, dest)
-    print(f"[HaluEval] Saved to: {dest}  (source: {src.relative_to(local_dir)})")
+    if src.suffix == ".parquet":
+        try:
+            import pyarrow.parquet as pq
+        except ImportError as exc:
+            raise ImportError(
+                "Downloaded HaluEval data is parquet, but 'pyarrow' is not installed."
+            ) from exc
+
+        table = pq.read_table(src)
+        records = table.to_pylist()
+        with dest.open("w", encoding="utf-8") as f:
+            json.dump(records, f, ensure_ascii=False, indent=2)
+        print(
+            f"[HaluEval] Converted parquet to JSON: {dest}  "
+            f"(source: {src.relative_to(local_dir)}, records: {len(records)})"
+        )
+    else:
+        shutil.copy2(src, dest)
+        print(f"[HaluEval] Saved to: {dest}  (source: {src.relative_to(local_dir)})")
 
     # Clean up cache dir
     cache_dir = out_dir / "_hf_cache"

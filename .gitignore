@@ -2,6 +2,11 @@ saves/
 outputs/
 logs/
 data/
+!data/
+data/*
+!data/HaluEval/
+data/HaluEval/*
+!data/HaluEval/qa_data.json
 __pycache__/
 */__pycache__/
 **/__pycache__/
