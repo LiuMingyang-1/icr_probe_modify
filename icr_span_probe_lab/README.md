@@ -258,9 +258,25 @@ icr_span_probe_lab/
 
 也就是说，**换数据集是备选方案，不是第一步**。
 
-## 9. CPU / GPU 预期
+## 9. 运行入口
 
-### 9.1 可以先在 CPU 上做的事情
+本实验的运行说明见：
+
+- `icr_span_probe_lab/RUN.md`
+
+如果只是先在云上做最小闭环，建议优先走：
+
+1. `prepare_span_ready_data.py`
+2. `build_tokenizer_windows.py`
+3. `build_silver_span_labels.py`
+4. `build_span_dataset.py`
+5. `train_baseline_mlp.py`
+
+等这个闭环跑通之后，再补 `spaCy Span` 路线和其余 4 类方法。
+
+## 10. CPU / GPU 预期
+
+### 10.1 可以先在 CPU 上做的事情
 
 以下工作默认可以先在本机 CPU 上做：
 
@@ -277,7 +293,7 @@ icr_span_probe_lab/
 - 平均 response token 约 10
 - span 实例规模仍然在可控范围内
 
-### 9.2 需要 GPU 的情况
+### 10.2 需要 GPU 的情况
 
 以下情况再考虑切到远程 GPU：
 
@@ -286,11 +302,11 @@ icr_span_probe_lab/
 - 使用较重的 NLI / entailment / LLM 作为自动标注器
 - 使用显著更大的 span-level 模型
 
-## 10. 建议的比较方式
+## 11. 建议的比较方式
 
 本实验最终至少要形成两层比较：
 
-### 10.1 span-level 比较
+### 11.1 span-level 比较
 
 比较对象：
 
@@ -304,7 +320,7 @@ icr_span_probe_lab/
 - F1
 - 代表性 case study
 
-### 10.2 sample-level 回聚比较
+### 11.2 sample-level 回聚比较
 
 对 span-level 预测结果做 sample-level 聚合，例如：
 
@@ -316,9 +332,9 @@ icr_span_probe_lab/
 
 > span-level 建模除了可解释性之外，是否还能在聚合后带来检测性能收益？
 
-## 11. 第一轮实现的建议顺序
+## 12. 第一轮实现的建议顺序
 
-### 11.1 先打通数据主干，不要先堆模型
+### 12.1 先打通数据主干，不要先堆模型
 
 优先级应该是：
 
@@ -328,7 +344,7 @@ icr_span_probe_lab/
 4. 先跑 Baseline MLP
 5. 再逐个补齐 4 类方法
 
-### 11.2 第一轮先保持方法适配简单
+### 12.2 第一轮先保持方法适配简单
 
 第一轮不要做大改造，尽量沿用现有方法框架：
 
@@ -336,14 +352,28 @@ icr_span_probe_lab/
 - 只改变“样本单位”从 sample 变为 span
 - 这样可以把贡献集中在“span 切法”和“更细粒度监督”上
 
-## 12. 本目录当前状态
+## 13. 本目录当前状态
 
-当前只建立了：
+当前已经补齐了独立实验骨架，主要包括：
 
 - `README.md`
 - `TODO.md`
+- `RUN.md`
+- `requirements.txt`
+- `scripts/`
+- `src/`
+- `data/`
+- `results/`
+- `figures/`
 
-目的：
+其中已经实现的核心内容包括：
 
-- 把这次实验的背景、约束、技术方向和执行顺序固定下来
-- 便于后续在新对话中直接据此继续实现
+- token 对齐恢复脚本
+- tokenizer-window span 构建脚本
+- spaCy span 构建脚本
+- silver span label 构建脚本
+- span pooling 与数据集导出
+- 5 类 span-level 方法训练脚本
+- sample-level 聚合评估脚本
+
+当前更适合直接按 `RUN.md` 的顺序在云端执行，而不是再从零搭骨架。
