@@ -15,3 +15,5 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+icr_span_probe_lab/data/**/*.jsonl
+icr_span_probe_lab/results/**/*.jsonl

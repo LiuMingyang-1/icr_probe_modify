@@ -1,0 +1,12 @@
+{
+  "span_ready_path": "/Volumes/LMY/code/icr_probe_modify/icr_span_probe_lab/data/intermediate/icr_halu_eval_span_ready.jsonl",
+  "labeled_span_path": "icr_span_probe_lab/data/span_labels/tokenizer_windows_silver_labels.jsonl",
+  "output_path": "/Volumes/LMY/code/icr_probe_modify/icr_span_probe_lab/data/datasets/tokenizer_windows_dataset.jsonl",
+  "pooling": "mean",
+  "total_rows": 340178,
+  "labeled_rows": 220000,
+  "route_tokenizer_window": 340178,
+  "span_type_window": 340178,
+  "label_0": 111440,
+  "label_1": 108560
+}

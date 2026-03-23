@@ -1,0 +1,11 @@
+{
+  "input_path": "/Volumes/LMY/code/icr_probe_modify/outputs/icr_halu_eval_random_qwen2.5.jsonl",
+  "qa_data_path": "/Volumes/LMY/code/icr_probe_modify/data/HaluEval/qa_data.json",
+  "output_path": "/Volumes/LMY/code/icr_probe_modify/icr_span_probe_lab/data/intermediate/icr_halu_eval_span_ready.jsonl",
+  "model_name_or_path": "Qwen/Qwen2.5-7B-Instruct",
+  "total_rows": 10000,
+  "aligned_rows": 10000,
+  "misaligned_rows": 0,
+  "alignment_rate": 1.0,
+  "mismatch_examples": []
+}

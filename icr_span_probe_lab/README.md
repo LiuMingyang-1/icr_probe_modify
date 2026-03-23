@@ -264,6 +264,10 @@ icr_span_probe_lab/
 
 - `icr_span_probe_lab/RUN.md`
 
+当前也提供了一键脚本：
+
+- `icr_span_probe_lab/scripts/run_span_lab.sh`
+
 如果只是先在云上做最小闭环，建议优先走：
 
 1. `prepare_span_ready_data.py`
@@ -271,6 +275,7 @@ icr_span_probe_lab/
 3. `build_silver_span_labels.py`
 4. `build_span_dataset.py`
 5. `train_baseline_mlp.py`
+6. `generate_default_figures.py` 或 `run_span_lab.sh figures-only`
 
 等这个闭环跑通之后，再补 `spaCy Span` 路线和其余 4 类方法。
 

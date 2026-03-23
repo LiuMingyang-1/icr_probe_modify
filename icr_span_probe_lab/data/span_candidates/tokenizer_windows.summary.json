@@ -1,0 +1,17 @@
+{
+  "input_path": "/Volumes/LMY/code/icr_probe_modify/icr_span_probe_lab/data/intermediate/icr_halu_eval_span_ready.jsonl",
+  "output_path": "/Volumes/LMY/code/icr_probe_modify/icr_span_probe_lab/data/span_candidates/tokenizer_windows.jsonl",
+  "window_sizes": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "samples_total": 10000,
+  "samples_aligned": 10000,
+  "spans_total": 340178,
+  "window_size_1": 97977,
+  "window_size_2": 89794,
+  "window_size_3": 80450,
+  "window_size_4": 71957
+}

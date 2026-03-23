@@ -1,0 +1,50 @@
+{
+  "family": "baseline_mlp",
+  "model": "BaselineMLP",
+  "dataset_path": "icr_span_probe_lab/data/datasets/tokenizer_windows_dataset.jsonl",
+  "feature_names": null,
+  "n_rows": 340178,
+  "n_labeled_rows": 220000,
+  "span_level": {
+    "AUROC_mean": 0.807906539604684,
+    "AUROC_std": 0.002352415918211436,
+    "AUPRC_mean": 0.7993930672336879,
+    "AUPRC_std": 0.0033108023157672516,
+    "F1_mean": 0.744248993091605,
+    "F1_std": 0.0021520864792897235,
+    "Accuracy_mean": 0.7147597331479126,
+    "Accuracy_std": 0.0013090839078788439
+  },
+  "sample_level": {
+    "max": {
+      "AUROC_mean": 0.9115019460077841,
+      "AUROC_std": 0.003364043414423122,
+      "AUPRC_mean": 0.8845044170827325,
+      "AUPRC_std": 0.0040792059453775365,
+      "F1_mean": 0.8756106558205786,
+      "F1_std": 0.003949123681501236,
+      "Accuracy_mean": 0.8684,
+      "Accuracy_std": 0.004328972164382643
+    },
+    "topk_mean": {
+      "AUROC_mean": 0.9475361901447604,
+      "AUROC_std": 0.0020551598549477103,
+      "AUPRC_mean": 0.9302977682743881,
+      "AUPRC_std": 0.00426185270308306,
+      "F1_mean": 0.9079990344421607,
+      "F1_std": 0.004085236931405173,
+      "Accuracy_mean": 0.9052,
+      "Accuracy_std": 0.005163332257370231
+    },
+    "noisy_or": {
+      "AUROC_mean": 0.9665298661194643,
+      "AUROC_std": 0.0010167736083376707,
+      "AUPRC_mean": 0.9588573976780884,
+      "AUPRC_std": 0.0023594804428510164,
+      "F1_mean": 0.9335767526865792,
+      "F1_std": 0.0021807094663530814,
+      "Accuracy_mean": 0.9330000000000002,
+      "Accuracy_std": 0.0024083189157584613
+    }
+  }
+}

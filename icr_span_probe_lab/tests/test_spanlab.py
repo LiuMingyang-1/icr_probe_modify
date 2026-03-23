@@ -14,6 +14,7 @@ from spanlab.evaluation import build_group_folds, evaluate_binary_predictions
 from spanlab.representation import build_span_dataset_record
 from spanlab.silver import assign_silver_label
 from spanlab.spans import build_tokenizer_windows, map_char_span_to_token_span
+from spanlab.visualization import build_prediction_index, build_token_level_scores, select_case_sample_id
 
 
 class SpanLabTest(unittest.TestCase):
@@ -103,6 +104,45 @@ class SpanLabTest(unittest.TestCase):
         for train_samples, val_samples in folds:
             self.assertTrue(train_samples.isdisjoint(val_samples))
             self.assertEqual(train_samples | val_samples, {"a", "b", "c", "d"})
+
+    def test_visualization_helpers(self) -> None:
+        dataset_rows = [
+            {
+                "span_id": "a",
+                "sample_id": "s1",
+                "sample_label": 1,
+                "token_start": 0,
+                "token_end": 2,
+                "silver_label": 1,
+            },
+            {
+                "span_id": "b",
+                "sample_id": "s1",
+                "sample_label": 1,
+                "token_start": 2,
+                "token_end": 3,
+                "silver_label": 0,
+            },
+            {
+                "span_id": "c",
+                "sample_id": "s2",
+                "sample_label": 0,
+                "token_start": 0,
+                "token_end": 1,
+                "silver_label": 0,
+            },
+        ]
+        prediction_rows = [
+            {"span_id": "a", "sample_id": "s1", "sample_label": 1, "probability": 0.9},
+            {"span_id": "b", "sample_id": "s1", "sample_label": 1, "probability": 0.3},
+            {"span_id": "c", "sample_id": "s2", "sample_label": 0, "probability": 0.8},
+        ]
+        pred_index = build_prediction_index(prediction_rows)
+        token_scores, token_silver = build_token_level_scores(dataset_rows, pred_index, n_tokens=3)
+        np.testing.assert_allclose(token_scores, np.array([0.9, 0.9, 0.3], dtype=np.float32))
+        np.testing.assert_array_equal(token_silver, np.array([1, 1, -1], dtype=np.int32))
+        self.assertEqual(select_case_sample_id(prediction_rows, selection="highest_hallucinated"), "s1")
+        self.assertEqual(select_case_sample_id(prediction_rows, selection="highest_false_positive"), "s2")
 
 
 if __name__ == "__main__":

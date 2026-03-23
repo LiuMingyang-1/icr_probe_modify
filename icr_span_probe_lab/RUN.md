@@ -51,6 +51,26 @@ python -m spacy download en_core_web_sm
 pip install -r requirements.txt
 ```
 
+## 3.3 一键脚本
+
+当前已经提供一键脚本：
+
+```bash
+bash icr_span_probe_lab/scripts/run_span_lab.sh minimal
+```
+
+支持三种模式：
+
+- `minimal`
+- `full`
+- `figures-only`
+
+也支持环境变量：
+
+- `DEVICE=cpu|cuda`
+- `MAX_SAMPLES=1000`
+- `SPACY_MODEL=en_core_web_sm`
+
 ## 4. 云端资源建议
 
 ### 4.1 预处理阶段
@@ -171,6 +191,35 @@ python3 icr_span_probe_lab/scripts/evaluate_sample_aggregation.py \
   --prediction_files icr_span_probe_lab/results/tokenizer_windows_dataset/baseline_mlp/BaselineMLP.oof_predictions.jsonl
 ```
 
+### 5.7 直接生成可视化结果
+
+在部分云环境里，`matplotlib` 的默认缓存目录可能不可写。为了避免字体缓存告警，建议先设：
+
+```bash
+export MPLCONFIGDIR=/tmp/matplotlib
+export XDG_CACHE_HOME=/tmp/xdg-cache
+```
+
+然后直接跑：
+
+```bash
+python3 icr_span_probe_lab/scripts/generate_default_figures.py
+```
+
+默认会生成：
+
+- 方法总览图
+- sample-level 聚合对比图
+- span 长度统计图
+- 1 个高分 hallucinated case 热图
+- 1 个高分 false positive case 热图
+
+说明：
+
+- 这个脚本会自动扫描 `results/` 下所有已经跑完的 `*.metrics.json` 和 `*.oof_predictions.jsonl`
+- 你当前只跑了哪些方法，它就只会画哪些方法
+- 等你后面在云上把全部方法跑完，它会自动把全量方法都纳入比较图
+
 ## 6. 完整流程
 
 如果最小闭环已经通了，可以按下面顺序跑完整实验。
@@ -231,6 +280,51 @@ python3 icr_span_probe_lab/scripts/train_trajectory_encoder.py \
 
 然后把同样一组命令再对 `spacy_spans_dataset.jsonl` 跑一遍。
 
+### 6.5 跑完整可视化
+
+如果前面的训练结果都已经在 `results/` 下，可以直接：
+
+```bash
+export MPLCONFIGDIR=/tmp/matplotlib
+export XDG_CACHE_HOME=/tmp/xdg-cache
+python3 icr_span_probe_lab/scripts/generate_default_figures.py
+```
+
+或者直接：
+
+```bash
+bash icr_span_probe_lab/scripts/run_span_lab.sh figures-only
+```
+
+如果你想单独画某一类图，也可以分别跑：
+
+```bash
+python3 icr_span_probe_lab/scripts/plot_method_comparison.py
+
+python3 icr_span_probe_lab/scripts/plot_span_statistics.py \
+  --dataset_path icr_span_probe_lab/data/datasets/tokenizer_windows_dataset.jsonl \
+  --prediction_file icr_span_probe_lab/results/tokenizer_windows_dataset/baseline_mlp/BaselineMLP.oof_predictions.jsonl
+
+python3 icr_span_probe_lab/scripts/plot_case_heatmap.py \
+  --dataset_path icr_span_probe_lab/data/datasets/tokenizer_windows_dataset.jsonl \
+  --prediction_file icr_span_probe_lab/results/tokenizer_windows_dataset/baseline_mlp/BaselineMLP.oof_predictions.jsonl \
+  --selection highest_hallucinated
+```
+
+### 6.6 一键全量运行
+
+如果你要在云端完整跑一遍，可以直接：
+
+```bash
+DEVICE=cuda bash icr_span_probe_lab/scripts/run_span_lab.sh full
+```
+
+如果你只是想先验证链路：
+
+```bash
+MAX_SAMPLES=1000 DEVICE=cpu bash icr_span_probe_lab/scripts/run_span_lab.sh minimal
+```
+
 ## 7. 小样本 smoke test
 
 如果你不想一上来就跑全量，建议先只做 500 或 1000 条。
@@ -283,6 +377,20 @@ python3 icr_span_probe_lab/scripts/build_spacy_spans.py --max_samples 1000
 - `*.metrics.json`
 - `*.oof_predictions.jsonl`
 
+### 8.3 图表
+
+可视化脚本默认把图写到：
+
+- `icr_span_probe_lab/figures/`
+
+当前支持的图包括：
+
+- `method_summary.png`
+- `sample_aggregation_summary.png`
+- `*_span_stats.png`
+- `*_highest_hallucinated.png`
+- `*_highest_false_positive.png`
+
 ## 9. 常见问题
 
 ### 9.1 `prepare_span_ready_data.py` 报 tokenizer 下载失败
@@ -331,8 +439,9 @@ pip install -r icr_span_probe_lab/requirements.txt
 4. 跑 `build_silver_span_labels.py`
 5. 跑 `build_span_dataset.py`
 6. 跑 `train_baseline_mlp.py`
-7. 跑 `evaluate_sample_aggregation.py`
-8. 查看 `results/` 下的 `metrics.json`
+7. 跑 `generate_default_figures.py`
+8. 跑 `evaluate_sample_aggregation.py`
+9. 查看 `results/` 和 `figures/`
 
 如果这条线结果正常，再补：
 

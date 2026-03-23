@@ -43,3 +43,11 @@ def load_spacy_model(model_name: str) -> Any:
     except OSError as exc:
         extra = f"Then install the English pipeline with `python -m spacy download {model_name}`."
         raise RuntimeError(_missing_dependency_message(model_name, extra=extra)) from exc
+
+
+def require_matplotlib() -> Any:
+    try:
+        import matplotlib
+    except ModuleNotFoundError as exc:
+        raise RuntimeError(_missing_dependency_message("matplotlib")) from exc
+    return matplotlib

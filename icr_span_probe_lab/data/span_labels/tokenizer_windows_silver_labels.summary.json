@@ -1,0 +1,14 @@
+{
+  "span_ready_path": "/Volumes/LMY/code/icr_probe_modify/icr_span_probe_lab/data/intermediate/icr_halu_eval_span_ready.jsonl",
+  "span_path": "icr_span_probe_lab/data/span_candidates/tokenizer_windows.jsonl",
+  "output_path": "/Volumes/LMY/code/icr_probe_modify/icr_span_probe_lab/data/span_labels/tokenizer_windows_silver_labels.jsonl",
+  "positive_threshold": 0.65,
+  "negative_threshold": 0.75,
+  "total_spans": 340178,
+  "decision_negative": 111440,
+  "label_0": 111440,
+  "span_type_window": 340178,
+  "decision_skip": 120178,
+  "decision_positive": 108560,
+  "label_1": 108560
+}
